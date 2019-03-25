@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Keen Heatmap Demo</title>
+</head>
+
+<body>
+
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/keen-analysis@3/dist/keen-analysis.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2"></script>
+
+  <div id="wrapper" class="customSize">
+    <div id="root">
+    </div>
+  </div>
+
+  <iframe src="https://keen.io/docs/" class="customSize"></iframe>
+
+  <style>
+    iframe{
+      border:0px none;
+      height:100%;
+      width:100%;
+    }
+
+    html, body{
+      margin:0;
+      padding:0;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    .customSize{
+      width: 1440px;
+      height: 1700px;
+    }
+
+    #wrapper{
+      position:absolute;
+      top:0;
+      left:0;
+    }
+
+    #root{
+      width:100%;
+      height:100%;
+    }
+  </style>
+
+  <script>
+
+    const client = new KeenAnalysis({
+      projectId: '5011efa95f546f2ce2000000',
+      readKey: 'D9E2872BB0841C7D080D77BA1CC6E49E07FBBF8C9312D650396711AA0B02B2F8'
+    });
+
+    client
+    .query({
+      savedQueryName: 'heatmap-demo-clicks'
+
+      /*
+      we use cached query to be able to use a restricted Access Key for this GET request.
+      to prepare this query use params:
+
+      {
+        "analysis_type":"count",
+        "event_collection":"clicks",
+        "group_by":
+          ["element.x_position","element.y_position"],
+        "filters":[
+          {"property_name":"url.info.path","operator":"eq","property_value":"/docs/"}, // page that you want to visualize
+          {"property_name":"element.x_position","operator":"ne","property_value":null},
+          {"property_name":"element.y_position","operator":"ne","property_value":null},
+
+          {"property_name":"tech.profile.screen.availWidth","operator":"gte","property_value":1440},
+          // important - it should be the same as CSS container of this demo page
+        ],
+
+        "timeframe":"this_30_days"
+      }
+      */
+    })
+    .then(data => {
+
+      const heatmap = h337.create({
+        container: document.getElementById('root')
+      });
+
+
+      let maxValue = 1;
+      data.result.forEach(item => {
+        if (item.result > maxValue) {
+          maxValue = item.result;
+        }
+      });
+
+      const dataMapped = data.result.map(item => {
+        return {
+          x: item['element.x_position'],
+          y: item['element.y_position'],
+          value: item.result
+        };
+      });
+
+      heatmap.setData({
+        max: maxValue,
+        data: dataMapped
+      });
+
+    })
+    .catch(err => {
+      // Handle errors
+    });
+  </script>
+
+
+</body>
+
+</html>
